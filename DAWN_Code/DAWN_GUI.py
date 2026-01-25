@@ -59,6 +59,12 @@ class VideoReconstructionApp(QMainWindow):
         self.ch_a_paths = []
         self.ch_b_paths = []
         self.single_paths = []
+        self.ch_a_rel_paths = []
+        self.ch_b_rel_paths = []
+        self.single_rel_paths = []
+        self.ch_a_is_dir = False
+        self.ch_b_is_dir = False
+        self.single_is_dir = False
         self.reconstruct_thread = None
 
         self.opt_path = "./GUI_Utils/Model/DAWN_CKPT/dbsn_gray_CT_data_CT_datadbsn3DCBF_unetskip_Dv7SWNA_31_0500_AP2/DBSN_fusion_Model.yaml"
@@ -245,13 +251,14 @@ class VideoReconstructionApp(QMainWindow):
         self.dual_mode_radio.toggled.connect(self.on_mode_changed)
 
         self.enhance_button = QPushButton("Reconstruct")
-        self.enhance_button.setFixedSize(120, 100)  # 设置固定宽度，只够装下"Reconstruct"
+        self.enhance_button.setFixedSize(120, 50)
         self.enhance_button.clicked.connect(self.enhance_videos)
 
         self.stop_button = QPushButton("Stop")
-        self.stop_button.setFixedSize(120, 40)
+        self.stop_button.setFixedSize(120, 50)
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_reconstruction)
+        self.update_button_styles()
 
         # 进度条
         self.enhance_progress = QProgressBar()
@@ -391,10 +398,12 @@ class VideoReconstructionApp(QMainWindow):
         monitor_button_layout = QHBoxLayout()
         monitor_button_layout.addWidget(self.monitor_container)  # System Monitor 占据剩余空间
         button_layout = QVBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(0)
         button_layout.addWidget(self.enhance_button)
         button_layout.addWidget(self.stop_button)
-        button_layout.addStretch(1)
         button_widget = QWidget()
+        button_widget.setFixedSize(120, 100)
         button_widget.setLayout(button_layout)
         monitor_button_layout.addWidget(button_widget)  # Buttons 在右侧
         monitor_button_layout.setStretch(0, 1)  # Monitor 可以拉伸
@@ -518,11 +527,17 @@ class VideoReconstructionApp(QMainWindow):
 
     def resolve_input_paths(self, file_path):
         if os.path.isdir(file_path):
-            files = [f for f in os.listdir(file_path) if f.lower().endswith((".tif", ".tiff"))]
-            files.sort()
-            return [opj(file_path, f) for f in files]
+            matches = []
+            for root, _, files in os.walk(file_path):
+                for fname in files:
+                    if fname.lower().endswith((".tif", ".tiff")):
+                        abs_path = opj(root, fname)
+                        rel_path = os.path.relpath(abs_path, file_path)
+                        matches.append((abs_path, rel_path))
+            matches.sort(key=lambda x: x[1])
+            return matches
         if os.path.isfile(file_path):
-            return [file_path]
+            return [(file_path, os.path.basename(file_path))]
         return []
 
     def set_input_path_from_edit(self, name):
@@ -538,11 +553,13 @@ class VideoReconstructionApp(QMainWindow):
 
     def browse_input_path(self, name):
         try:
-            path = self.open_file_dialog(
-                "Select Input TIFF",
-                "TIFF Files (*.tif *.tiff);;All Files (*)",
-                ".",
-            )
+            path = self.open_folder_dialog("Select Input Folder (optional)")
+            if not path:
+                path = self.open_file_dialog(
+                    "Select Input TIFF",
+                    "TIFF Files (*.tif *.tiff);;All Files (*)",
+                    ".",
+                )
             if path:
                 self.loadAndSetInputPath(path, name)
         except Exception:
@@ -575,20 +592,30 @@ class VideoReconstructionApp(QMainWindow):
             msg_box.exec()
             return None
 
+        abs_paths = [p for p, _ in input_paths]
+        rel_paths = [r for _, r in input_paths]
+        is_dir = os.path.isdir(file_path)
+
         if name == "single":
-            self.single_paths = input_paths
+            self.single_paths = abs_paths
+            self.single_rel_paths = rel_paths
+            self.single_is_dir = is_dir
         elif name == "a":
-            self.ch_a_paths = input_paths
+            self.ch_a_paths = abs_paths
+            self.ch_a_rel_paths = rel_paths
+            self.ch_a_is_dir = is_dir
         else:
-            self.ch_b_paths = input_paths
+            self.ch_b_paths = abs_paths
+            self.ch_b_rel_paths = rel_paths
+            self.ch_b_is_dir = is_dir
 
         path_label.setText(file_path)
-        if len(input_paths) > 1:
-            path_label.setToolTip(f"Batch mode: {len(input_paths)} files")
+        if len(abs_paths) > 1:
+            path_label.setToolTip(f"Batch mode: {len(abs_paths)} files")
         else:
             path_label.setToolTip(file_path)
 
-        data = load_tiff_seq(input_paths[0])
+        data = load_tiff_seq(abs_paths[0])
         print(f"numpy.shape: {data.shape}")
         in_slider.setMaximum(data.shape[0] - 1)
         in_slider.setMinimum(0)
@@ -738,6 +765,9 @@ class VideoReconstructionApp(QMainWindow):
             msg_box.exec()
 
         # 调用另一个线程处理
+        input_paths_a = None
+        input_paths_b = None
+        input_paths_single = None
         if self.mode == "single":
             if not self.single_paths and self.single_ch_numpy is None:
                 msg_box = QMessageBox()
@@ -746,8 +776,6 @@ class VideoReconstructionApp(QMainWindow):
                 msg_box.exec()
                 return
             print(f"Mode: Single, Linear Gain: {self.linear_gain}, Device: {self.selected_device}")
-            input_paths_a = None
-            input_paths_b = None
             input_paths_single = self.single_paths if self.single_paths else None
             ch_a_numpy = None
             ch_b_numpy = None
@@ -759,7 +787,32 @@ class VideoReconstructionApp(QMainWindow):
                 msg_box.setText("Please load both Acceptor and Donor channel videos first.")
                 msg_box.exec()
                 return
-            if self.ch_a_paths and self.ch_b_paths and len(self.ch_a_paths) != len(self.ch_b_paths):
+            if self.ch_a_paths and self.ch_b_paths and (self.ch_a_is_dir != self.ch_b_is_dir):
+                msg_box = QMessageBox()
+                msg_box.setWindowTitle("Error!")
+                msg_box.setText("Acceptor and Donor must both be files or both be folders for batch mode.")
+                msg_box.exec()
+                return
+            if self.ch_a_paths and self.ch_b_paths and self.ch_a_is_dir and self.ch_b_is_dir:
+                map_b = {rel: path for path, rel in zip(self.ch_b_paths, self.ch_b_rel_paths)}
+                paired_a = []
+                paired_b = []
+                missing = []
+                for path_a, rel in zip(self.ch_a_paths, self.ch_a_rel_paths):
+                    if rel in map_b:
+                        paired_a.append(path_a)
+                        paired_b.append(map_b[rel])
+                    else:
+                        missing.append(rel)
+                if missing:
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Error!")
+                    msg_box.setText(f"Donor folder is missing {len(missing)} file(s). Example: {missing[0]}")
+                    msg_box.exec()
+                    return
+                self.ch_a_paths = paired_a
+                self.ch_b_paths = paired_b
+            elif self.ch_a_paths and self.ch_b_paths and len(self.ch_a_paths) != len(self.ch_b_paths):
                 msg_box = QMessageBox()
                 msg_box.setWindowTitle("Error!")
                 msg_box.setText("Acceptor and Donor input folders must contain the same number of TIFF files.")
@@ -802,6 +855,7 @@ class VideoReconstructionApp(QMainWindow):
         self.reconstruct_thread = t
         self.enhance_button.setEnabled(False)
         self.stop_button.setEnabled(True)
+        self.update_button_styles()
         # t.quit()
 
     def enhance_finished(self, result):
@@ -809,6 +863,7 @@ class VideoReconstructionApp(QMainWindow):
         self.enhance_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         self.reconstruct_thread = None
+        self.update_button_styles()
         
         # Stop system monitoring
         self.stop_monitoring()
@@ -852,6 +907,7 @@ class VideoReconstructionApp(QMainWindow):
         self.enhance_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         self.reconstruct_thread = None
+        self.update_button_styles()
         self.stop_monitoring()
 
     def enhance_canceled(self, result):
@@ -865,12 +921,22 @@ class VideoReconstructionApp(QMainWindow):
         self.enhance_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         self.reconstruct_thread = None
+        self.update_button_styles()
         self.stop_monitoring()
 
     def stop_reconstruction(self):
         if self.reconstruct_thread is not None and self.reconstruct_thread.isRunning():
             self.reconstruct_thread.request_stop()
             self.stop_button.setEnabled(False)
+            self.update_button_styles()
+
+    def update_button_styles(self):
+        self.enhance_button.setStyleSheet(
+            "background-color: #000000; color: white;" if self.enhance_button.isEnabled() else "background-color: #C0C0C0; color: #555555;"
+        )
+        self.stop_button.setStyleSheet(
+            "background-color: #000000; color: white;" if self.stop_button.isEnabled() else "background-color: #C0C0C0; color: #555555;"
+        )
     
     def start_monitoring(self):
         """Start system monitoring"""
