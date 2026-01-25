@@ -1,0 +1,38 @@
+Proj_name: DCMAN_NoMerge_Fn3
+Random_seed: 2
+
+### Network Architecture
+Input_frame_num: 3      # Numbers of Frames in a video (sliding window)
+Network_name: "DCMAN"
+Channel_merge: "none"
+
+### Network Training Process
+Epoch_size: 500       # Number of batches in an epoch
+Batch_size: 10         # Number of video in a mini-batch
+LR: 0.0001
+Iter_num: 40           # Number of Iterations (Net trained with an epoch)
+
+### Simulation
+Img_size: [120, 120]
+Simulation_dsample: [1, 2]
+
+### Loss function
+Loss: 
+  name: L2_Weighted
+  params:
+    gamma: 1
+
+
+### Dataset Definition
+Dataset:
+  train:
+    - path: /data/datasets/cyx_aligned_datasets/20220812_HJ_HS_6.7/train/
+      layer: 1
+      weight: 1
+      type: .tif
+  test:
+    - path: /data/datasets/cyx_aligned_datasets/20220812_HJ_HS_6.7/test/
+      layer: 1
+      weight: 1
+      type: .tif
+

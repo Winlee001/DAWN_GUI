@@ -1,0 +1,14 @@
+# Ignore everything by default
+*
+
+# Allow this .gitignore
+!.gitignore
+
+# Keep DAWN_Code
+!DAWN_Code/
+!DAWN_Code/**
+
+# Exclude large or generated content
+DAWN_Code/outputs/
+DAWN_Code/GUI_Utils/Test_Img/
+DAWN_Code/GUI_Utils/Model/

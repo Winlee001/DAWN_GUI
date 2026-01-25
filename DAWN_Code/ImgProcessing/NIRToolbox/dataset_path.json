@@ -1,0 +1,6 @@
+{
+    "rgbnir":[
+        {"path":"D:/proj-files-level2/dual-channel-low-light/dataset/rgb_nir_video_dataset_full_v4/train", 
+            "layer":1, "weight":1, "type":".tiff"}
+    ]
+}
