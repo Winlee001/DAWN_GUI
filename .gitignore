@@ -4,11 +4,27 @@
 # Allow this .gitignore
 !.gitignore
 
-# Keep DAWN_Code
-!DAWN_Code/
-!DAWN_Code/**
+# Keep DAWN_gray
+!DAWN_gray/
+!DAWN_gray/**
+
+# Keep DAWN_InferGUI_code
+!DAWN_InferGUI_code/
+!DAWN_InferGUI_code/**
+
+# Keep DAWN_TrainGUI_code
+!DAWN_TrainGUI_code/
+!DAWN_TrainGUI_code/**
 
 # Exclude large or generated content
-DAWN_Code/outputs/
-DAWN_Code/GUI_Utils/Test_Img/
-DAWN_Code/GUI_Utils/Model/
+DAWN_InferGUI_code/build/
+DAWN_InferGUI_code/outputs/
+DAWN_InferGUI_code/GUI_Utils/Test_Img/
+DAWN_InferGUI_code/GUI_Utils/Model/
+DAWN_TrainGUI_code/build/
+
+DAWN_gray/ckpt/
+DAWN_gray/wandb/
+
+# Ignore all Python cache directories
+__pycache__/
