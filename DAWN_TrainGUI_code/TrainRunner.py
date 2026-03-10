@@ -32,6 +32,8 @@ class TrainRunner(QThread):
 
     def run(self):
         try:
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
             self.process = subprocess.Popen(
                 self.command,
                 cwd=self.cwd,
@@ -40,6 +42,7 @@ class TrainRunner(QThread):
                 text=True,
                 bufsize=1,
                 universal_newlines=True,
+                env=env,
             )
             if self.process.pid:
                 self.startedProcess.emit(self.process.pid)

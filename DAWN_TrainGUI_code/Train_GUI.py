@@ -106,11 +106,20 @@ class TrainGUI(QMainWindow):
         self.load_template_for_script()
 
     def resolve_dawn_gray_dir(self) -> str:
-        candidates = [
-            os.path.join(self.workspace_dir, "DAWN_gray"),
-            os.path.join(self.base_dir, "DAWN_gray"),
-            os.path.join(os.path.dirname(self.workspace_dir), "DAWN_gray"),
-        ]
+        # Prefer DAWN_gray located next to the packaged EXE.
+        # This avoids accidentally binding to a developer workspace DAWN_gray.
+        if getattr(sys, "frozen", False):
+            candidates = [
+                os.path.join(self.base_dir, "DAWN_gray"),
+                os.path.join(self.workspace_dir, "DAWN_gray"),
+                os.path.join(os.path.dirname(self.workspace_dir), "DAWN_gray"),
+            ]
+        else:
+            candidates = [
+                os.path.join(self.workspace_dir, "DAWN_gray"),
+                os.path.join(self.base_dir, "DAWN_gray"),
+                os.path.join(os.path.dirname(self.workspace_dir), "DAWN_gray"),
+            ]
         for path in candidates:
             if os.path.isdir(path):
                 return path
@@ -584,7 +593,7 @@ class TrainGUI(QMainWindow):
             raise FileNotFoundError(f"Script not found: {script_path}")
 
         python_exec = self.resolve_python_exec_for_training()
-        cmd = [python_exec, script_path]
+        cmd = [python_exec, "-u", script_path]
 
         def add_arg(name: str, value: Any):
             if value is None or value == "":
@@ -748,8 +757,12 @@ class TrainGUI(QMainWindow):
             log_dir = os.path.normpath(os.path.join(self.DAWN_gray_dir, log_dir))
         log_name = config.get("log_name") or "DAWN_gray"
         noise_type = "Noisy_data"
-        ct_desc = config.get("Run_description") or "None"
-        checkpoint_dir = f"{log_name}_{noise_type}_{noise_type}{ct_desc}"
+        run_desc = config.get("Run_description") or "None"
+        # Must match DAWN_gray training scripts:
+        # checkpoint_dir = args.save_prefix + '_' + noise_level
+        # save_prefix = log_name + '_' + noise_type
+        # noise_level = Run_description (when noise_type == Noisy_data)
+        checkpoint_dir = f"{log_name}_{noise_type}_{run_desc}"
         return os.path.join(log_dir, checkpoint_dir + "_log.txt")
 
     def read_yaml(self, file_path: str) -> Optional[Dict[str, Any]]:

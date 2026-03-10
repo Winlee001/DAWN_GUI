@@ -2,7 +2,7 @@
 
 This GUI is used to launch and monitor DAWN training jobs with a visual workflow (parameter editing, YAML import/export, live logs, loss/LR curves, and system monitor).
 
-### TL;DR: Select a training script → load template/YAML → set `Run_description` → click **Start Training**.
+### TL;DR: Select a training script → load config → set `Run_description` → click **Start Training**.
 
 ---
 
@@ -27,7 +27,6 @@ You can use either packaged executable or Python script mode.
 
 3. **CUDA / GPU notes**
    - Training speed strongly depends on GPU.
-   - CPU can run but is usually too slow for practical training.
    - GPU usage display requires NVIDIA driver + `pynvml`.
 
 ---
@@ -103,8 +102,8 @@ GUI behavior:
    - Empty `Run_description` blocks start
    - `resume=continue` without `last_ckpt` blocks start
 
-- `trainset`, `valset`: training/validation dataset names (comma-separated if needed by script)
-- `input_channel`, `output_channel`, `middle_channel`: model IO/internal channels
+- `trainset`, `valset`: training/validation dataset names (comma-separated if in dual-channel mode)
+- `input_channel`, `output_channel`, `middle_channel`: model IO/internal channels,you must keep input_channel equal to frame of train data
 - `patch_size`, `batch_size`, `load_thread`: data loader and patch settings
 - `steps`: LR schedule milestones (e.g. `30,60,80`)
 - `bsn_ver`: model variant selector
@@ -113,6 +112,7 @@ GUI behavior:
 - `device_ids`: target GPU IDs (`all` or custom list depending on backend parser)
 - `dynamic_load`, `no_flip`, `frame_shuffle`: boolean runtime flags
 
+we recommend to main most settings in most case except trainset/valset/log_dir/Run_description.
 ---
 
 ## Troubleshooting
@@ -128,10 +128,6 @@ GUI behavior:
 
 4. **Start button does nothing / immediate error**
    - Check required fields (`Run_description`, resume checkpoint path)
-   - Check selected script exists in `DAWN_gray/`
-
-5. **Training runs but metrics not updating**
-   - Ensure training script writes logs in expected format (`Epoch: [...]`, `Current_epoch_avg_loss`, `lr:`)
 
 ---
 
@@ -140,8 +136,8 @@ GUI behavior:
 1. Choose script by task (single vs dual channel)
 2. Load template YAML first
 3. Only change minimal experiment-specific fields:
+   - log_dir
    - dataset names
-   - output/log naming
    - `Run_description`
    - core hyperparameters
 4. Save YAML per experiment for reproducibility

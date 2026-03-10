@@ -19,7 +19,7 @@ If you have a GPU which supports CUDA >= 12.1, we recommend **running binary app
    - Install CUDA >= 12.1 from [here](https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64).
    - Double-click the "DAWN_GUI.exe" file to launch the GUI.
 3. **Running the python script**
-   - In Progress
+   - refer to DAWN_InferGUI_code for GUI code and DAWN_gray for source code
 
 ---
 
@@ -55,6 +55,7 @@ Short workflow from input to output.
 
 - Multiply input intensity (default 1.0).
 - Use >1 for dim inputs, <1 for bright inputs.
+- Test data brightness should be consistent with training data brightness.
 
 ### Step 6: Select Device
 
@@ -77,7 +78,7 @@ Short workflow from input to output.
 
 ## Updates:
 
-### Ver. 1.1 (2026-01-25)
+### Ver. 1.1 (2026-03-10)
 - Added batch inference with recursive folder search and relative-path pairing for dual-channel inputs.
 - Added file/folder browsing support in input fields.
 - Added Stop button to interrupt reconstruction.

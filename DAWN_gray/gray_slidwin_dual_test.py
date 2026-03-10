@@ -45,17 +45,8 @@ def Numpy_PNG_TIF(args, numpy, count, save_path,Perfect=False):
     if not os.path.exists(save_path):
         os.makedirs(save_path, exist_ok=True)
 
-    # print(numpy.shape)
-    # 由于tensor数据类型一般为（N,C,H,W），所以简单的去除前两维度，用squeeze，并一次性转变为Numpy数组
 
     numpy = numpy[:,0,:,:]
-    # print(numpy.shape)
-    # numpy = numpy.squeeze(0).squeeze(0).detach().cpu().numpy(
-    # 将 Tensor 从 (C, H, W) 转换为 (H, W, C) 格式，并转换为 NumPy 数组
-    # numpy = numpy.permute(1, 2, 0).cpu().numpy().由于Numpy只能处理cpu上的张量，所以需要转移到cpu上
-    # detach操作是针对训练过程正在使用梯度的分离出来转化为Numpy，验证过程中使用也不会有问题
-
-    # 如果 Tensor 的值是 [0, 1] 范围，需要转换为 [0, 65535]，并将类型转换为 uint16
     if not Perfect:
         numpy = (numpy * 65535).astype(np.uint16)
     if args.imlib == 'tiff':
