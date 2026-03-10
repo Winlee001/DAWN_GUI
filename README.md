@@ -1,5 +1,6 @@
 
-This repository accompanies our paper: **“DAWN: Spatiotemporal Self-Supervision Enables Long-Term, Low-Photon Single-Molecule Fluorescence Measurements.”** DAWN provides a universal self-supervised computational framework for high-fidelity imaging at the photon limit, enabling the study of molecular dynamics with unprecedented duration and minimal photodamage.
+  This repository accompanies our paper: **“DAWN: Spatiotemporal Self-Supervision Enables Long-Term, Low-Photon Single-Molecule Fluorescence Measurements.”** 
+  DAWN provides a universal self-supervised computational framework for high-fidelity imaging at the photon limit, enabling the study of molecular dynamics with unprecedented duration and minimal photodamage.
 
 The repository is organized into three main components for easy use and custom development:
 
