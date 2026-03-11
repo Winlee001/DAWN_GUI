@@ -19,8 +19,8 @@ The repository is organized into three main components for easy use and custom d
 
   For convenience, we also provide ready-to-use GUI versions that do not require additional setup. You can download them from **Tsinghua Cloud**:
 
-* [Training GUI (Tsinghua Cloud)](https://cloud.tsinghua.edu.cn/library/3005aca1-d435-4d7b-8431-509154a69bd9/DAWN_TrainGUI_v1.0/)
-* [Inference GUI (Tsinghua Cloud)](https://cloud.tsinghua.edu.cn/library/b7ac4456-fbbb-4aae-95d3-344372651c2e/DAWN_InferGUI_v1.1/)
+* [Train GUI (Tsinghua Cloud)](https://cloud.tsinghua.edu.cn/d/8abf43bdada243d69822/)
+* [Inference GUI (Tsinghua Cloud)](https://cloud.tsinghua.edu.cn/d/f3ae5bd279b140aa8640/)
 
   We would be honored if you gave us a star ⭐ if you find our method useful!
 
